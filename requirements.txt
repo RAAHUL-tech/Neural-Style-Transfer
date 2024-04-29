@@ -1,0 +1,17 @@
+torch
+torchvision
+numpy
+matplotlib
+seaborn
+pandas
+scipy
+Pillow
+tensorboardX
+tqdm
+click
+Flask
+itsdangerous
+Jinja2
+MarkupSafe
+Werkzeug
+Flask-MySQLdb

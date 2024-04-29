@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload and Display Images</title>
+</head>
+<body>
+    <h1>Upload Image</h1>
+    <form action="/" method="post" enctype="multipart/form-data">
+        <input type="file" name="image">
+        <select name="image_type">
+            <option value="content">Content</option>
+            <option value="style">Style</option>
+        </select>
+        <input type="submit" value="Upload">
+    </form>
+
+    <h1>Uploaded Images</h1>
+    <div>
+        {% for image in images %}
+            <div>
+                <img src="data:image/jpeg;base64,{{ image.image_data }}" alt="{{ image.image_type }} Image">
+                <p>{{ image.image_type }} Image</p>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
