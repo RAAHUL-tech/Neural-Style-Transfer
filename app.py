@@ -1,60 +1,55 @@
-import logging
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request
 from flask_mysqldb import MySQL
-import base64
-import secrets
+import os
+import tempfile
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)
-
-# MySQL Configuration
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = ''
-app.config['MYSQL_DB'] = 'image_db'
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-
-
-logging.basicConfig(filename='app.log', level=logging.DEBUG)
+app.config['MYSQL_HOST'] = "localhost"
+app.config['MYSQL_USER'] = "root"
+app.config['MYSQL_PASSWORD'] = ""
+app.config['MYSQL_DB'] = "img_db"
 
 mysql = MySQL(app)
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/',methods=['GET', 'POST'])
 def index():
-    try:
-        if request.method == 'POST':
-            if 'image' in request.files and 'image_type' in request.form:
-                image = request.files['image']
-                image_type = request.form['image_type']
-                if image.filename != '':
-                    # Read image data
-                    image_data = image.read()
+    return render_template('index.html')
 
-                    # Convert image data to base64
-                    encoded_image = base64.b64encode(image_data).decode('utf-8')
 
-                    # Save image and image type to MySQL database
-                    cur = mysql.connection.cursor()
-                    cur.execute("INSERT INTO images (image_type, image_data) VALUES (%s, %s)", (image_type,encoded_image))
-                    mysql.connection.commit()
-                    session['last_uploaded_image_id'] = cur.lastrowid
-                    cur.close()
+@app.route('/upload', methods=['POST'])
+def upload():
+    if 'content' not in request.files or 'style' not in request.files:
+        return "No Images Uploaded!"
 
-        # Fetch the last uploaded image from database
-        last_uploaded_image_id = session.get('last_uploaded_image_id')
-        if last_uploaded_image_id:
-            cur = mysql.connection.cursor()
-            cur.execute("SELECT id, image_data, image_type FROM images WHERE id = %s", (last_uploaded_image_id,))
-            image = cur.fetchone()
-            cur.close()
-        else:
-            image = None
+    content = request.files['content']
+    style = request.files['style']
 
-        return render_template('index.html', image=image)
+    if content.filename == '' or style.filename == '':
+        return "No Image Selected!"
 
-    except Exception as e:
-        logging.exception("An error occurred: %s", str(e))
-        return "An error occurred while processing your request. Please try again later."
+    temp_dir = tempfile.gettempdir()
+    file_path1 = os.path.join(temp_dir, content.filename)
+    file_path2 = os.path.join(temp_dir, style.filename)
+    content.save(file_path1)
+    style.save(file_path2)
+    print(file_path1)
+    print(file_path2)
+    name1 = content.filename
+    name2 = style.filename
+    with open(file_path1, 'rb') as f:
+        data1 = f.read()
+    with open(file_path2, 'rb') as f:
+        data2 = f.read()
+
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO images (content, style) VALUES (%s, %s)", (data1, data2))
+    mysql.connection.commit()
+    cur.close()
+    os.remove(file_path1)
+    os.remove(file_path2)
+
+    return render_template('generate.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -166,7 +166,6 @@ datasets/
 .venv/
 .idea/
 experiments/
-app.log
 desktop.ini
 readme.txt
 

@@ -4,7 +4,6 @@ import torch
 import torch.nn as nn
 import torch.utils.data as data
 from PIL import Image
-from PIL import ImageFile
 from tensorboardX import SummaryWriter
 from torchvision import transforms
 from tqdm import tqdm
@@ -77,12 +76,12 @@ parser.add_argument('--log_dir', default='./logs',
                     help='Directory to save the log')
 parser.add_argument('--lr', type=float, default=5e-4)
 parser.add_argument('--lr_decay', type=float, default=1e-5)
-parser.add_argument('--max_iter', type=int, default=30)
+parser.add_argument('--max_iter', type=int, default=4000)
 parser.add_argument('--batch_size', type=int, default=2)
 parser.add_argument('--style_weight', type=float, default=10.0)
-parser.add_argument('--content_weight', type=float, default=7.0)
+parser.add_argument('--content_weight', type=float, default=8.0)
 parser.add_argument('--n_threads', type=int, default=0)
-parser.add_argument('--save_model_interval', type=int, default=2)
+parser.add_argument('--save_model_interval', type=int, default=200)
 parser.add_argument('--position_embedding', default='sine', type=str, choices=('sine', 'learned'),
                         help="Type of positional embedding to use on top of the image features")
 parser.add_argument('--hidden_dim', default=512, type=int,
