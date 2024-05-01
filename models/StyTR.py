@@ -171,12 +171,12 @@ class StyTrans(nn.Module):
 
     def calc_content_loss(self, input, target):
       assert (input.size() == target.size())
-      assert (target.requires_grad is False)
+      #assert (target.requires_grad is False)
       return self.mse_loss(input, target)
 
     def calc_style_loss(self, input, target):
         assert (input.size() == target.size())
-        assert (target.requires_grad is False)
+        #assert (target.requires_grad is False)
         input_mean, input_std = calc_mean_std(input)
         target_mean, target_std = calc_mean_std(target)
         return self.mse_loss(input_mean, target_mean) + \

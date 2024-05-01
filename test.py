@@ -11,17 +11,19 @@ from torchvision.utils import save_image
 import models.transformer as transformer
 import models.StyTR as StyTR
 import numpy as np
+
+
 def test_transform(size, crop):
     transform_list = []
-   
-    if size != 0: 
+
+    if size != 0:
         transform_list.append(transforms.Resize(size))
     if crop:
         transform_list.append(transforms.CenterCrop(size))
     transform_list.append(transforms.ToTensor())
     transform = transforms.Compose(transform_list)
     return transform
-  
+
 
 parser = argparse.ArgumentParser()
 # Basic options
@@ -42,29 +44,22 @@ parser.add_argument('--decoder_path', type=str, default='experiments/decoder_ite
 parser.add_argument('--Trans_path', type=str, default='experiments/transformer_iter_4000.pth')
 parser.add_argument('--embedding_path', type=str, default='experiments/embedding_iter_4000.pth')
 
-
 parser.add_argument('--style_interpolation_weights', type=str, default="")
 parser.add_argument('--a', type=float, default=1.0)
 parser.add_argument('--position_embedding', default='sine', type=str, choices=('sine', 'learned'),
-                        help="Type of positional embedding to use on top of the image features")
+                    help="Type of positional embedding to use on top of the image features")
 parser.add_argument('--hidden_dim', default=512, type=int,
-                        help="Size of the embeddings (dimension of the transformer)")
+                    help="Size of the embeddings (dimension of the transformer)")
 args = parser.parse_args()
 
-
-
-
 # Advanced options
-content_size=512
-style_size=512
-crop='store_true'
-save_ext='.jpg'
-output_path=args.output
-preserve_color='store_true'
-alpha=args.a
-
-
-
+content_size = 512
+style_size = 512
+crop = 'store_true'
+save_ext = '.jpg'
+output_path = args.output
+preserve_color = 'store_true'
+alpha = args.a
 
 device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
 
@@ -77,14 +72,13 @@ else:
 
 # Either --style or --style_dir should be given.
 if args.style:
-    style_paths = [Path(args.style)]    
+    style_paths = [Path(args.style)]
 else:
     style_dir = Path(args.style_dir)
     style_paths = [f for f in style_dir.glob('*')]
 
 if not os.path.exists(output_path):
     os.mkdir(output_path)
-
 
 vgg = StyTR.vgg
 vgg.load_state_dict(torch.load(args.vgg))
@@ -98,6 +92,7 @@ decoder.eval()
 Trans.eval()
 vgg.eval()
 from collections import OrderedDict
+
 new_state_dict = OrderedDict()
 state_dict = torch.load(args.decoder_path)
 for k, v in state_dict.items():
@@ -119,11 +114,9 @@ for k, v in state_dict.items():
     new_state_dict[namekey] = v
 embedding.load_state_dict(new_state_dict)
 
-network = StyTR.StyTrans(vgg,decoder,embedding,Trans,args)
+network = StyTR.StyTrans(vgg, decoder, embedding, Trans, args)
 network.eval()
 network.to(device)
-
-
 
 content_tf = test_transform(content_size, crop)
 style_tf = test_transform(style_size, crop)
@@ -131,24 +124,23 @@ style_tf = test_transform(style_size, crop)
 for content_path in content_paths:
     for style_path in style_paths:
         print(content_path)
-       
 
         content = content_tf(Image.open(content_path).convert("RGB"))
-        print("in test",content.shape)
-        h,w,c=np.shape(content)
+        print("in test", content.shape)
+        h, w, c = np.shape(content)
         style = style_tf(Image.open(style_path).convert("RGB"))
         print("in test style", style.shape)
-      
+
         style = style.to(device).unsqueeze(0)
         content = content.to(device).unsqueeze(0)
-        
+
         with torch.no_grad():
             output, loss_c, loss_s, l_identity1, l_identity2 = network(content, style)
         print(type(output))
-        print("output is:",output)
-        #output = [t.cpu() for t in output]
+        print("output is:", output)
+        # output = [t.cpu() for t in output]
         output = output[0].cpu()
-                
+
         output_name = '{:s}/{:s}_stylized_{:s}{:s}'.format(
             output_path, splitext(basename(content_path))[0],
             splitext(basename(style_path))[0], save_ext
@@ -158,5 +150,5 @@ for content_path in content_paths:
         print("Losses are: id1 Loss :", l_identity1)
         print("Losses are: id2 Loss :", l_identity2)
         save_image(output, output_name)
-   
+
 

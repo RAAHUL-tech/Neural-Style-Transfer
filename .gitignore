@@ -166,6 +166,6 @@ datasets/
 .venv/
 .idea/
 experiments/
+reinforment_model/
 desktop.ini
-readme.txt
 
