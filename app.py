@@ -136,6 +136,7 @@ def generate_image(content_path, style_path):
     output = output[0].cpu()
     to_pil_image = transforms.ToPILImage()
     output = to_pil_image(output)
+    print("Loss",((loss_c*8) + (loss_s*10) + (l_identity1 * 70) + (l_identity2 * 1)))
     print("Losses are: Content Fidelity :", loss_c)
     print("Global Effects :", loss_s)
     print("Losses are: id1 Loss :", l_identity1)
@@ -250,9 +251,7 @@ def perform_reinforcement_learning(rating):
     style_image = style_tf(Image.open(args.style).convert("RGB")).unsqueeze(0).to(device).requires_grad_(True)
 
     # Hyperparameters
-    content_weight = 8.0
-    style_weight = 10.0
-    learning_rate = 0.001
+    learning_rate = 0.00001
 
     # Optimizer
     optimizer = torch.optim.Adam([
@@ -265,12 +264,12 @@ def perform_reinforcement_learning(rating):
     print(style_image.shape)
     # Forward pass
     output, loss_c, loss_s, l_identity1, l_identity2 = network(content_image, style_image)
-
     # Compute total loss
-    loss = content_weight * loss_c + style_weight * loss_s + (l_identity1 * 70) + (l_identity2 * 1)
+    loss = (loss_c * 8) + (loss_s * 10) + (l_identity1 * 70) + (l_identity2 * 1)
+    print("Loss", loss)
     # adding penalty
-    loss = loss * int(rating)
-    print("Loss",loss)
+    loss = loss + int(rating)
+    print("Loss", loss)
     # Backward pass
     optimizer.zero_grad()
     loss.sum().backward()

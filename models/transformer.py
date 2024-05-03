@@ -34,7 +34,6 @@ class PyramidalPositionalEncoding(nn.Module):
 
 
 class Transformer(nn.Module):
-
     def __init__(self, d_model=512, nhead=8, num_encoder_layers=3,
                  num_decoder_layers=3, dim_feedforward=2048, dropout=0.1,
                  activation="gelu", normalize_before=False,
@@ -52,12 +51,9 @@ class Transformer(nn.Module):
         decoder_norm = nn.LayerNorm(d_model)
         self.decoder = TransformerDecoder(decoder_layer, num_decoder_layers, decoder_norm,
                                           return_intermediate=return_intermediate_dec)
-
         self._reset_parameters()
-
         self.d_model = d_model
         self.nhead = nhead
-
         self.ppe = PyramidalPositionalEncoding(patch_sizes=[3, 1], num_channels=512, dim=256)
 
     def _reset_parameters(self):
